@@ -1,6 +1,12 @@
+namespace SpriteKind {
+    export const Bonus = SpriteKind.create()
+    export const Weapon = SpriteKind.create()
+    export const Princess = SpriteKind.create()
+    export const Ladder = SpriteKind.create()
+}
 function check_if_barrel_is_on_ladder (barrel_sprite: Sprite) {
     isBarrelOnLadder = false
-    for (let l of sprites.allOfKind(SpriteKind.Player)) {
+    for (let l of sprites.allOfKind(SpriteKind.Ladder)) {
         if (barrel_sprite.overlapsWith(l)) {
             isBarrelOnLadder = true
             break;
@@ -39,7 +45,7 @@ function create_princess () {
         . . . f 3 3 5 3 3 5 3 3 f . . . 
         . . . f f f f f f f f f f . . . 
         . . . . . f f . . f f . . . . . 
-        `, SpriteKind.Player)
+        `, SpriteKind.Princess)
     princess.setPosition(24, 40)
 }
 controller.left.onEvent(ControllerButtonEvent.Pressed, function () {
@@ -71,11 +77,18 @@ function barrel_movement () {
 }
 function place_hammer_bonus () {
     for (let hammer_pos of tiles.getTilesByType(assets.tile`hammer_bonus`)) {
-        m = sprites.create(assets.image`hammer_down`, SpriteKind.Player)
+        m = sprites.create(assets.image`hammer_down`, SpriteKind.Bonus)
         tiles.setTileAt(hammer_pos, assets.tile`transparency16`)
         tiles.placeOnTile(m, hammer_pos)
     }
 }
+sprites.onOverlap(SpriteKind.Player, SpriteKind.Bonus, function (sprite, otherSprite) {
+    hammer = sprites.create(assets.image`hammer_up`, SpriteKind.Weapon)
+    music.play(music.melodyPlayable(music.jumpUp), music.PlaybackMode.InBackground)
+    sprites.destroy(otherSprite)
+    has_weapon = 1
+    barrels_smashed = 0
+})
 function create_new_barrel () {
     barrel = sprites.create(assets.image`barrel`, SpriteKind.Projectile)
     animation.runImageAnimation(
@@ -94,16 +107,9 @@ controller.right.onEvent(ControllerButtonEvent.Pressed, function () {
     hammer_dir = 1
 })
 sprites.onOverlap(SpriteKind.Player, SpriteKind.Projectile, function (sprite, otherSprite) {
-    if (hammer_hit > 0) {
-        info.changeScoreBy(3)
-        sprites.destroy(otherSprite)
-        music.play(music.melodyPlayable(music.bigCrash), music.PlaybackMode.InBackground)
-        barrels_smashed += 1
-        if (barrels_smashed > 2) {
-            has_weapon = 0
-            sprites.destroy(hammer)
-        }
-    }
+    music.play(music.melodyPlayable(music.wawawawaa), music.PlaybackMode.InBackground)
+    sprites.destroy(otherSprite)
+    info.changeLifeBy(-1)
 })
 function create_mario () {
     mario = sprites.create(img`
@@ -132,16 +138,13 @@ controller.down.onEvent(ControllerButtonEvent.Pressed, function () {
         mario.y += 10
     }
 })
-sprites.onOverlap(SpriteKind.Player, SpriteKind.Player, function (sprite, otherSprite) {
-    hammer = sprites.create(assets.image`hammer_up`, SpriteKind.Player)
-    music.play(music.melodyPlayable(music.jumpUp), music.PlaybackMode.InBackground)
-    sprites.destroy(otherSprite)
-    has_weapon = 1
-    barrels_smashed = 0
+sprites.onOverlap(SpriteKind.Player, SpriteKind.Princess, function (sprite, otherSprite) {
+    music.play(music.melodyPlayable(music.magicWand), music.PlaybackMode.InBackground)
+    game.gameOver(true)
 })
 function create_ladders () {
     for (let ladder_pos of tiles.getTilesByType(assets.tile`Ladder_place_holder`)) {
-        m = sprites.create(assets.image`ladder`, SpriteKind.Player)
+        m = sprites.create(assets.image`ladder`, SpriteKind.Ladder)
         tiles.setTileAt(ladder_pos, assets.tile`transparency16`)
         tiles.placeOnTile(m, ladder_pos)
     }
@@ -150,6 +153,18 @@ function create_kong () {
     kong = sprites.create(assets.image`kong`, SpriteKind.Enemy)
     kong.setPosition(8, 24)
 }
+sprites.onOverlap(SpriteKind.Weapon, SpriteKind.Projectile, function (sprite, otherSprite) {
+    if (hammer_hit > 0) {
+        info.changeScoreBy(3)
+        sprites.destroy(otherSprite)
+        music.play(music.melodyPlayable(music.bigCrash), music.PlaybackMode.InBackground)
+        barrels_smashed += 1
+        if (barrels_smashed > 2) {
+            has_weapon = 0
+            sprites.destroy(hammer)
+        }
+    }
+})
 function draw_hammer () {
     if (hammer_hit > 0) {
         hammer.setImage(assets.image`hammer_down`)
@@ -166,8 +181,8 @@ function draw_hammer () {
     }
 }
 let kong: Sprite = null
-let hammer: Sprite = null
 let barrel: Sprite = null
+let hammer: Sprite = null
 let m: Sprite = null
 let princess: Sprite = null
 let hammer_hit = 0
@@ -197,7 +212,7 @@ timer.after(1000, function () {
 })
 game.onUpdate(function () {
     isMarioOnLadder = false
-    for (let n of sprites.allOfKind(SpriteKind.Player)) {
+    for (let n of sprites.allOfKind(SpriteKind.Ladder)) {
         if (mario.overlapsWith(n)) {
             isMarioOnLadder = true
             break;
@@ -220,6 +235,6 @@ game.onUpdate(function () {
         }
     }
 })
-game.onUpdateInterval(20000, function () {
+game.onUpdateInterval(10000, function () {
     create_new_barrel()
 })
