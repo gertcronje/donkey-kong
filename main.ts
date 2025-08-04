@@ -54,20 +54,25 @@ controller.left.onEvent(ControllerButtonEvent.Pressed, function () {
 function barrel_movement () {
     for (let b of sprites.allOfKind(SpriteKind.Projectile)) {
         check_if_barrel_is_on_ladder(b)
-        if (b.x >= 154) {
-            b.vx = -50
-            animation.stopAnimation(animation.AnimationTypes.ImageAnimation, b)
-        }
-        if (b.x <= 4) {
-            b.vx = 50
-            animation.stopAnimation(animation.AnimationTypes.ImageAnimation, b)
-        }
         if (isBarrelOnLadder) {
+            animation.stopAnimation(animation.AnimationTypes.ImageAnimation, b)
             if (b.vy == 0 && b.x < 80) {
                 b.vx = 50
+                animation.runImageAnimation(
+                b,
+                assets.animation`barrel_animation_right`,
+                200,
+                true
+                )
             }
             if (b.vy == 0 && b.x > 80) {
                 b.vx = -50
+                animation.runImageAnimation(
+                b,
+                assets.animation`barrel_animation_left`,
+                200,
+                true
+                )
             }
         }
         if (b.x <= 8 && b.y > 260) {
@@ -207,7 +212,7 @@ place_hammer_bonus()
 has_weapon = 0
 hammer_dir = 0
 barrels_smashed = 0
-timer.after(1000, function () {
+timer.after(4000, function () {
     scene.cameraFollowSprite(mario)
 })
 game.onUpdate(function () {
@@ -235,6 +240,6 @@ game.onUpdate(function () {
         }
     }
 })
-game.onUpdateInterval(10000, function () {
+game.onUpdateInterval(5000, function () {
     create_new_barrel()
 })
