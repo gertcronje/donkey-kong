@@ -16,12 +16,6 @@
         "tilemapTile": true,
         "displayName": "hammer_bonus"
     },
-    "tile4": {
-        "data": "hwQQABAAAAAAAO7u7u4AAADgvr3dSw4AAL7bvd3b6wDg29u93du9Dk7d273d273k3t3bvd3bve3evdu93du97d77v73d273t3vu/vd3bve3evdu93du97d7d273d273tTt3bvd3bveTg29u93du9DgC+273d2+sAAOC7vd1LDgAAAO7u7u4AAA==",
-        "mimeType": "image/x-mkcd-f4",
-        "tilemapTile": true,
-        "displayName": "barrel"
-    },
     "tile2": {
         "data": "hwQQABAAAADu7u7u7u7u7u6+u7u7u+vu7uu7u7u7vu7uu767u+u77u67vru7vrvu7rvru7u+u+7uu7u+67u77u67u+u+u7vu7ru76767u+7uu7u+67u77u6767u7vrvu7rvru7vru+7uu767u+u77u7ru7u7u77u7r67u7u76+7u7u7u7u7u7g==",
         "mimeType": "image/x-mkcd-f4",

@@ -22,7 +22,7 @@ controller.B.onEvent(ControllerButtonEvent.Pressed, function () {
     hammer_hit = 4
 })
 controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
-    music.play(music.melodyPlayable(music.baDing), music.PlaybackMode.InBackground)
+    music.play(music.createSoundEffect(WaveShape.Square, 400, 600, 255, 0, 100, SoundExpressionEffect.None, InterpolationCurve.Linear), music.PlaybackMode.InBackground)
     if (mario.vy == 0) {
         mario.vy = -150
     }
@@ -112,9 +112,15 @@ controller.right.onEvent(ControllerButtonEvent.Pressed, function () {
     hammer_dir = 1
 })
 sprites.onOverlap(SpriteKind.Player, SpriteKind.Projectile, function (sprite, otherSprite) {
-    music.play(music.melodyPlayable(music.wawawawaa), music.PlaybackMode.InBackground)
+    music.play(music.melodyPlayable(music.zapped), music.PlaybackMode.UntilDone)
     sprites.destroy(otherSprite)
+    sprites.destroy(sprite, effects.disintegrate, 500)
     info.changeLifeBy(-1)
+    if (info.life() > 0) {
+        create_mario()
+        scene.cameraFollowSprite(mario)
+        has_weapon = 0
+    }
 })
 function create_mario () {
     mario = sprites.create(img`
@@ -201,7 +207,7 @@ let g = 0
 music.play(music.melodyPlayable(music.powerUp), music.PlaybackMode.UntilDone)
 scene.setBackgroundColor(1)
 tiles.setCurrentTilemap(tilemap`level1`)
-info.setLife(3)
+info.setLife(5)
 g = 350
 scene.centerCameraAt(0, 0)
 create_mario()
@@ -240,6 +246,6 @@ game.onUpdate(function () {
         }
     }
 })
-game.onUpdateInterval(5000, function () {
+game.onUpdateInterval(8000, function () {
     create_new_barrel()
 })
