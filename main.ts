@@ -27,9 +27,10 @@ function destroy_hammers () {
     }
 }
 controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
-    music.play(music.createSoundEffect(WaveShape.Square, 400, 600, 255, 0, 100, SoundExpressionEffect.None, InterpolationCurve.Linear), music.PlaybackMode.InBackground)
     if (mario.vy == 0) {
+        music.play(music.createSoundEffect(WaveShape.Square, 400, 600, 255, 0, 100, SoundExpressionEffect.None, InterpolationCurve.Linear), music.PlaybackMode.InBackground)
         mario.vy = -150
+        jumping = 1
     }
 })
 controller.left.onEvent(ControllerButtonEvent.Pressed, function () {
@@ -81,12 +82,16 @@ function barrel_movement () {
                 true
                 )
             }
-        } else {
-        	
         }
         if (b.x <= 8 && b.y > map_bottom) {
             sprites.destroy(b)
         }
+    }
+}
+function is_close (sprite1: Sprite, sprite2: Sprite, num: number) {
+    is_close_result = false
+    if (Math.abs(sprite1.x - sprite2.x) <= num) {
+        is_close_result = true
     }
 }
 function place_hammer_bonus () {
@@ -103,6 +108,7 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.Bonus, function (sprite, otherSp
     sprites.destroy(otherSprite)
     has_weapon = 1
     barrels_smashed = 0
+    info.changeScoreBy(5)
 })
 function create_new_barrel () {
     barrel = sprites.create(assets.image`barrel`, SpriteKind.Projectile)
@@ -117,6 +123,34 @@ function create_new_barrel () {
     barrel.ay = g
     // Apply gravity when not on a ladder
     barrel.vx = 50
+}
+function update_mario () {
+    isMarioOnLadder = false
+    for (let n of sprites.allOfKind(SpriteKind.Ladder)) {
+        if (mario.overlapsWith(n)) {
+            isMarioOnLadder = true
+            break;
+        }
+    }
+    if (isMarioOnLadder) {
+        // No gravity when on any ladder
+        mario.ay = 0
+        // No gravity when on any ladder
+        mario.vy = 0
+        mario.setImage(assets.image`mario_back`)
+    } else {
+        // Apply gravity when not on a ladder
+        mario.ay = g
+        if (mario.vx < 0) {
+            mario.setImage(assets.image`mario_left`)
+        } else {
+            if (mario.vx > 0) {
+                mario.setImage(assets.image`mario_right`)
+            } else {
+                mario.setImage(assets.image`mario_front`)
+            }
+        }
+    }
 }
 controller.right.onEvent(ControllerButtonEvent.Pressed, function () {
     hammer_dir = 1
@@ -137,6 +171,20 @@ function create_mario () {
     mario = sprites.create(assets.image`mario_front`, SpriteKind.Player)
     mario.setPosition(8, map_bottom)
     controller.moveSprite(mario, 50, 0)
+}
+function update_jump_score () {
+    for (let c of sprites.allOfKind(SpriteKind.Projectile)) {
+        if (jumping) {
+            is_close(mario, c, 16)
+            if (is_close_result) {
+                if (mario.y < c.y - 16 && mario.y > c.y - 32) {
+                    info.changeScoreBy(5)
+                    music.play(music.melodyPlayable(music.baDing), music.PlaybackMode.InBackground)
+                    jumping = 0
+                }
+            }
+        }
+    }
 }
 controller.down.onEvent(ControllerButtonEvent.Pressed, function () {
     if (isMarioOnLadder) {
@@ -160,7 +208,7 @@ function create_kong () {
 }
 sprites.onOverlap(SpriteKind.Weapon, SpriteKind.Projectile, function (sprite, otherSprite) {
     if (hammer_hit > 0) {
-        info.changeScoreBy(3)
+        info.changeScoreBy(10)
         sprites.destroy(otherSprite)
         music.play(music.melodyPlayable(music.bigCrash), music.PlaybackMode.InBackground)
         barrels_smashed += 1
@@ -189,17 +237,20 @@ let kong: Sprite = null
 let barrel: Sprite = null
 let hammer: Sprite = null
 let m: Sprite = null
+let is_close_result = false
 let princess: Sprite = null
 let hammer_hit = 0
 let isMarioOnLadder = false
 let isBarrelOnLadder = false
 let mario: Sprite = null
+let jumping = 0
 let barrels_smashed = 0
 let hammer_dir = 0
 let has_weapon = 0
 let map_bottom = 0
 let g = 0
 music.play(music.melodyPlayable(music.powerUp), music.PlaybackMode.UntilDone)
+music.play(music.stringPlayable(music.convertRTTTLToMelody("Mario:d=16,o=5,b=100:32p,e6,e6,p,e6,p,c6,e6,p,g6,8p,p,g,8p,32p,c6,8p,g,8p,e,8p,a,p,b,p,a#,a,p,g,e6,g6,a6,p,f6,g6,p,e6,p,c6,d6,b,4p,g6,f#6,f6,d#6,p,e6,p,g#,a,c6,p,a,c6,d6,8p,8d#6,p,d6,8p,8c6"), 200), music.PlaybackMode.LoopingInBackground)
 scene.setBackgroundColor(1)
 tiles.setCurrentTilemap(tilemap`level1`)
 info.setLife(5)
@@ -214,40 +265,12 @@ place_hammer_bonus()
 has_weapon = 0
 hammer_dir = 0
 barrels_smashed = 0
+jumping = 0
 timer.after(4000, function () {
     scene.cameraFollowSprite(mario)
 })
-let mario_front = assets.image`mario_front`
-let mario_left = assets.image`mario_left`
-let mario_right = assets.image`mario_right`
-let mario_back = assets.image`mario_back`
 game.onUpdate(function () {
-    isMarioOnLadder = false
-    for (let n of sprites.allOfKind(SpriteKind.Ladder)) {
-        if (mario.overlapsWith(n)) {
-            isMarioOnLadder = true
-            break;
-        }
-    }
-    if (isMarioOnLadder) {
-        // No gravity when on any ladder
-        mario.ay = 0
-        // No gravity when on any ladder
-        mario.vy = 0
-        mario.setImage(assets.image`mario_back`)
-    } else {
-        // Apply gravity when not on a ladder
-        mario.ay = g
-        if (mario.vx > 0) {
-            mario.setImage(assets.image`mario_right`)
-        } else {
-            if (mario.vx < 0) {
-                mario.setImage(assets.image`mario_left`)
-            } else {
-                mario.setImage(assets.image`mario_front`)
-            }
-        }
-    }
+    update_mario()
     barrel_movement()
     if (has_weapon) {
         draw_hammer()
@@ -255,6 +278,7 @@ game.onUpdate(function () {
             hammer_hit += -1
         }
     }
+    update_jump_score()
 })
 game.onUpdateInterval(8000, function () {
     create_new_barrel()

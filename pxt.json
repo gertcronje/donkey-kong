@@ -6,7 +6,8 @@
         "device": "*",
         "color-coded-tilemap": "*",
         "Timers": "github:microsoft/arcade-timers#v1.1.0",
-        "editor-extension-sample": "github:riknoll/pxt-arcade-asset-tool#bba1e09e5df247b363270261a21fa6972fd93351"
+        "editor-extension-sample": "github:riknoll/pxt-arcade-asset-tool#bba1e09e5df247b363270261a21fa6972fd93351",
+        "pxt-rtttl": "github:pelikhan/pxt-rtttl#v0.0.12"
     },
     "files": [
         "main.blocks",
