@@ -21,11 +21,19 @@ controller.up.onEvent(ControllerButtonEvent.Pressed, function () {
 controller.B.onEvent(ControllerButtonEvent.Pressed, function () {
     hammer_hit = 4
 })
+function destroy_hammers () {
+    for (let h of sprites.allOfKind(SpriteKind.Weapon)) {
+        sprites.destroy(h)
+    }
+}
 controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
     music.play(music.createSoundEffect(WaveShape.Square, 400, 600, 255, 0, 100, SoundExpressionEffect.None, InterpolationCurve.Linear), music.PlaybackMode.InBackground)
     if (mario.vy == 0) {
         mario.vy = -150
     }
+})
+controller.left.onEvent(ControllerButtonEvent.Pressed, function () {
+    hammer_dir = 0
 })
 function create_princess () {
     princess = sprites.create(img`
@@ -48,9 +56,6 @@ function create_princess () {
         `, SpriteKind.Princess)
     princess.setPosition(24, 40)
 }
-controller.left.onEvent(ControllerButtonEvent.Pressed, function () {
-    hammer_dir = 0
-})
 function barrel_movement () {
     for (let b of sprites.allOfKind(SpriteKind.Projectile)) {
         check_if_barrel_is_on_ladder(b)
@@ -58,6 +63,7 @@ function barrel_movement () {
             animation.stopAnimation(animation.AnimationTypes.ImageAnimation, b)
             if (b.vy == 0 && b.x < 80) {
                 b.vx = 50
+                b.vy = -50
                 animation.runImageAnimation(
                 b,
                 assets.animation`barrel_animation_right`,
@@ -67,6 +73,7 @@ function barrel_movement () {
             }
             if (b.vy == 0 && b.x > 80) {
                 b.vx = -50
+                b.vy = -50
                 animation.runImageAnimation(
                 b,
                 assets.animation`barrel_animation_left`,
@@ -74,8 +81,10 @@ function barrel_movement () {
                 true
                 )
             }
+        } else {
+        	
         }
-        if (b.x <= 8 && b.y > 260) {
+        if (b.x <= 8 && b.y > map_bottom) {
             sprites.destroy(b)
         }
     }
@@ -88,6 +97,7 @@ function place_hammer_bonus () {
     }
 }
 sprites.onOverlap(SpriteKind.Player, SpriteKind.Bonus, function (sprite, otherSprite) {
+    destroy_hammers()
     hammer = sprites.create(assets.image`hammer_up`, SpriteKind.Weapon)
     music.play(music.melodyPlayable(music.jumpUp), music.PlaybackMode.InBackground)
     sprites.destroy(otherSprite)
@@ -120,28 +130,12 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.Projectile, function (sprite, ot
         create_mario()
         scene.cameraFollowSprite(mario)
         has_weapon = 0
+        destroy_hammers()
     }
 })
 function create_mario () {
-    mario = sprites.create(img`
-        . . . . . . . . . . . . . . . . 
-        . . . . f f f f f f . . . . . . 
-        . . . f 2 f e e e e f f . . . . 
-        . . f 2 2 2 f e e e e f f . . . 
-        . . f e e e e f f e e e f . . . 
-        . f e 2 2 2 2 e e f f f f . . . 
-        . f 2 e f f f f 2 2 2 e f . . . 
-        . f f f e e e f f f f f f f . . 
-        . f e e 4 4 f b e 4 4 e f f . . 
-        . . f e d d f 1 4 d 4 e e f . . 
-        . . . f d d d d 4 e e e f . . . 
-        . . . f e 4 4 4 e d d 4 . . . . 
-        . . . f 2 2 2 2 e d d e . . . . 
-        . . f f 5 5 4 4 f e e f . . . . 
-        . . f f f f f f f f f f . . . . 
-        . . . f f f . . . f f . . . . . 
-        `, SpriteKind.Player)
-    mario.setPosition(8, 264)
+    mario = sprites.create(assets.image`mario_front`, SpriteKind.Player)
+    mario.setPosition(8, map_bottom)
     controller.moveSprite(mario, 50, 0)
 }
 controller.down.onEvent(ControllerButtonEvent.Pressed, function () {
@@ -172,7 +166,7 @@ sprites.onOverlap(SpriteKind.Weapon, SpriteKind.Projectile, function (sprite, ot
         barrels_smashed += 1
         if (barrels_smashed > 2) {
             has_weapon = 0
-            sprites.destroy(hammer)
+            destroy_hammers()
         }
     }
 })
@@ -203,12 +197,14 @@ let mario: Sprite = null
 let barrels_smashed = 0
 let hammer_dir = 0
 let has_weapon = 0
+let map_bottom = 0
 let g = 0
 music.play(music.melodyPlayable(music.powerUp), music.PlaybackMode.UntilDone)
 scene.setBackgroundColor(1)
 tiles.setCurrentTilemap(tilemap`level1`)
 info.setLife(5)
 g = 350
+map_bottom = 532
 scene.centerCameraAt(0, 0)
 create_mario()
 create_ladders()
@@ -221,6 +217,10 @@ barrels_smashed = 0
 timer.after(4000, function () {
     scene.cameraFollowSprite(mario)
 })
+let mario_front = assets.image`mario_front`
+let mario_left = assets.image`mario_left`
+let mario_right = assets.image`mario_right`
+let mario_back = assets.image`mario_back`
 game.onUpdate(function () {
     isMarioOnLadder = false
     for (let n of sprites.allOfKind(SpriteKind.Ladder)) {
@@ -234,9 +234,19 @@ game.onUpdate(function () {
         mario.ay = 0
         // No gravity when on any ladder
         mario.vy = 0
+        mario.setImage(assets.image`mario_back`)
     } else {
         // Apply gravity when not on a ladder
         mario.ay = g
+        if (mario.vx > 0) {
+            mario.setImage(assets.image`mario_right`)
+        } else {
+            if (mario.vx < 0) {
+                mario.setImage(assets.image`mario_left`)
+            } else {
+                mario.setImage(assets.image`mario_front`)
+            }
+        }
     }
     barrel_movement()
     if (has_weapon) {
